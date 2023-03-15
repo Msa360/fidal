@@ -22,7 +22,24 @@ int main(int argc, char const **argv)
     // char* ip = "127.0.0.1"; // now using INADDR_ANY
     unsigned int port = 3200;   
 
-    int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    int server_socket;
+    if ((server_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0)  
+    {  
+        perror("socket failed");  
+        exit(1);  
+    }  
+    //set socket to allow multiple connections, might delete
+    int opt = 1; // TRUE
+    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0)  
+    {  
+        perror("setsockopt::SO_REUSEADDR");  
+        exit(1);  
+    }
+    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEPORT, (char *)&opt, sizeof(opt)) < 0)  
+    {  
+        perror("setsockopt::SO_REUSEPORT");  
+        exit(1);  
+    }
 
     // define the server address
     struct sockaddr_in server_address;
@@ -36,37 +53,52 @@ int main(int argc, char const **argv)
         exit(1);
     }
 
-    listen(server_socket, 2);
-
-    int client_socket = accept(server_socket, NULL, NULL);
-
-
-    char client_arg[256];
-
-    int n = recv(client_socket, &client_arg, sizeof(client_arg), 0);
-    printf("Client arg is: %s\n", client_arg);
+    if (listen(server_socket, 30) < 0)  
+    {  
+        perror("listen");  
+        exit(1);  
+    } 
 
 
+    int client_socket;
+    int childpid;
 
-    FILE *fileP = fopen("test.txt", "r");
-    if (fileP == NULL)
-    {
-        perror("[-]Server error while opening file\n");
-        exit(1);
-    }
+    while (1) {
     
+        if ((client_socket = accept(server_socket, NULL, NULL)) < 0)
+        {
+            perror("accept");
+            exit(1);
+        }
+        
+        char client_arg[4];
+        int n = recv(client_socket, &client_arg, sizeof(client_arg), 0);
+        printf("Client arg is: %s\n", client_arg);
 
-    send_file(fileP, client_socket);
-    printf("[+]File data sent successfully.\n");
-    fclose(fileP);
-    if (close(server_socket) == 0)
-    {
-        printf("[+]Disconnected the server.\n");
-    } else
-    {
-        printf("[-]Error while disconnecting");
+
+        // Creates a child process
+        if ((childpid = fork()) == 0) {
+
+            // Closing the server socket id
+            close(server_socket);
+ 
+            FILE *fileP = fopen("test.txt", "r");
+            if (fileP == NULL)
+            {
+                perror("[-]Server error while opening file\n");
+                exit(1);
+            }
+            send_file(fileP, client_socket);
+            printf("[+]File data sent successfully.\n");
+            fclose(fileP);
+            close(client_socket);
+            break;
+        } else 
+        {
+            close(client_socket);
+        }
     }
-    
+
     return 0;
 }
 

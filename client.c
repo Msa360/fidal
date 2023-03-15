@@ -14,7 +14,7 @@
 
 void receive_file(int sockfd);
 
-int main(int argc, char const *argv[])
+int main(int argc, char const **argv)
 {
     char* ip = "127.0.0.1";
     int port = 3200;
@@ -27,7 +27,7 @@ int main(int argc, char const *argv[])
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons(port);
     server_address.sin_addr.s_addr = inet_addr(ip);
-
+    
     int connection_status = connect(network_socket, (struct sockaddr *)&server_address, sizeof(server_address));
     if (connection_status == -1)
     {
@@ -45,16 +45,18 @@ int main(int argc, char const *argv[])
     //     }
     //     i++;
     // }
-    if (strcmp(argv[1], "ls") == 0)
+
+    if (argc >= 2)
     {
-        send(network_socket, "x01", sizeof("x01"), 0);
-    } 
-    else if (strcmp(argv[1], "get") == 0)
-    {
-        send(network_socket, "x02", sizeof("x02"), 0);
+        if (strcmp(argv[1], "ls") == 0) // todo: check if argv[1] exists else segmentation error
+        {
+            send(network_socket, "x01", sizeof("x01"), 0);
+        } 
+        else if (strcmp(argv[1], "get") == 0)
+        {
+            send(network_socket, "x02", sizeof("x02"), 0);
+        }
     }
-    
-    
     
     receive_file(network_socket);
     printf("[+]File received!\n");
@@ -70,7 +72,7 @@ void receive_file(int sockfd)
 {
     int n; 
     FILE *fp;
-    char *filename = "file2.txt";
+    char *filename = "test.file2.txt";
     char buffer[SIZE];
 
     fp = fopen(filename, "w");

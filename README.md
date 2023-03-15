@@ -1,4 +1,6 @@
-# File transfer command line program
+# Fidal
+
+## The simplest file transfer command line program
 
 - ### &check; super simple
 - ### &check; easy to use
@@ -11,4 +13,4 @@ using tcp/ip to transfer data over network
 
 - transfer progress bar
 - encryption
-- passwords for servers
+- passwords to connect to servers
