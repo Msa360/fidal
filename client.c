@@ -50,12 +50,28 @@ int main(int argc, char const **argv)
     {
         if (strcmp(argv[1], "ls") == 0) // todo: check if argv[1] exists else segmentation error
         {
-            send(network_socket, "x01", sizeof("x01"), 0);
-        } 
+            char method = 1; // means ls
+            send(network_socket, &method, sizeof(method), 0);
+        }
         else if (strcmp(argv[1], "get") == 0)
         {
-            send(network_socket, "x02", sizeof("x02"), 0);
+            if (argc >= 3) {
+                char method = 2; // means get 
+                char request_message[42];
+                request_message[0] = method;
+                request_message[1] = 0;
+                strcat(request_message, argv[2]); // todo: change to argv[3] after ip:port is implemented
+                send(network_socket, request_message, sizeof(request_message), 0);
+            } else
+            {
+                printf("Error: no file given in argument\n");
+                exit(0);
+            }
+            
         }
+    } else {
+        printf("Error: not enough arguments\n");
+        exit(0);
     }
     
     receive_file(network_socket);
@@ -72,7 +88,7 @@ void receive_file(int sockfd)
 {
     int n; 
     FILE *fp;
-    char *filename = "test.file2.txt";
+    char *filename = "test.received.txt";
     char buffer[SIZE];
 
     fp = fopen(filename, "w");

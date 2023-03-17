@@ -70,31 +70,39 @@ int main(int argc, char const **argv)
             perror("accept");
             exit(1);
         }
-        
-        char client_arg[4];
-        int n = recv(client_socket, &client_arg, sizeof(client_arg), 0);
-        printf("Client arg is: %s\n", client_arg);
 
-
-        // Creates a child process
         if ((childpid = fork()) == 0) {
 
-            // Closing the server socket id
             close(server_socket);
- 
-            FILE *fileP = fopen("test.txt", "r");
-            if (fileP == NULL)
+
+            char client_arg[42]; // 1 byte for arg and 40 bytes for filename, 1 byte for '\0'
+            if (recv(client_socket, &client_arg, sizeof(client_arg), 0) <= 0) 
             {
-                perror("[-]Server error while opening file\n");
-                exit(1);
+                perror("[-]Bad client arg\n");
             }
-            send_file(fileP, client_socket);
-            printf("[+]File data sent successfully.\n");
-            fclose(fileP);
-            close(client_socket);
-            break;
-        } else 
-        {
+            printf("Client arg is: %s\n", client_arg);
+
+            if (client_arg[0] == 2) 
+            {
+                char *filename = client_arg + 1;
+
+                FILE *fileP = fopen(filename, "r");
+                if (fileP == NULL)
+                {
+                    perror("[-]Server error while trying to open file\n");
+                    exit(1);
+                }
+                send_file(fileP, client_socket);
+                printf("[+]File data sent successfully.\n");
+                fclose(fileP);
+                close(client_socket);
+                break;
+
+            } else {
+                break;
+            }
+
+        } else {
             close(client_socket);
         }
     }
