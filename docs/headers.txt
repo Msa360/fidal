@@ -1,0 +1,25 @@
+This file is defining the headers used by the server & client during data transfer
+
+client requests:
+    <1 byte for method> <50 bytes max for name>
+    method:
+        1 for ls
+        2 for get
+        if ls is used then name can by empty or can be a subdirectory
+    name:
+        file/directory name converted in ascii and with null byte appended
+    example byte by byte of get request for "file.txt":
+        1 102 105 108 101 46 116 120 116 0 - <get> <"file.txt"> <null character>
+
+
+server ls response:
+    <1 byte for status> <4 bytes for size> <1 byte for type of file n> <1 byte for name length of file n> <name of file n> <1 byte for size of file n+1> <name of file n+1>
+    status:
+        1 for success
+        0 for error
+    size:
+        number of file/directories
+    type:
+        0 for file
+        1 for directory
+    [status, size] are headers, and [type, name length, name] are specific to each file name

@@ -1,5 +1,11 @@
 // server.c
 
+/*  architecture details
+    example of a client request: "2main.c"
+    The first byte (2 in this case) means the method, and the rest is the filename
+    If method is 1, then every other byte after it should be ignore
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <netinet/in.h>
@@ -75,17 +81,20 @@ int main(int argc, char const **argv)
 
             close(server_socket);
 
-            char client_arg[42]; // 1 byte for arg and 40 bytes for filename, 1 byte for '\0'
+            char client_arg[51]; // 1 byte for arg and 50 bytes for filename including '\0'
             if (recv(client_socket, &client_arg, sizeof(client_arg), 0) <= 0) 
             {
                 perror("[-]Bad client arg\n");
             }
-            printf("Client arg is: %s\n", client_arg);
-
-            if (client_arg[0] == 2) 
+            if (client_arg[0] == 1) 
             {
+                // todo: ls list available files to client
+            }
+            else if (client_arg[0] == 2) 
+            {
+                printf("Client requested: %s\n", client_arg + 1); // client_arg + 1 to skip method byte
+                
                 char *filename = client_arg + 1;
-
                 FILE *fileP = fopen(filename, "r");
                 if (fileP == NULL)
                 {

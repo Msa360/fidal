@@ -48,16 +48,18 @@ int main(int argc, char const **argv)
 
     if (argc >= 2)
     {
-        if (strcmp(argv[1], "ls") == 0) // todo: check if argv[1] exists else segmentation error
+        if (strcmp(argv[1], "ls") == 0)
         {
             char method = 1; // means ls
-            send(network_socket, &method, sizeof(method), 0);
+            send(network_socket, &method, sizeof(method), 0);   // send ls request
+            char filenames_received[3000];  // 3 000 bytes reserved to store filenames
+            recv(network_socket, filenames_received, sizeof(filenames_received), 0);    // wait for response
         }
         else if (strcmp(argv[1], "get") == 0)
         {
             if (argc >= 3) {
                 char method = 2; // means get 
-                char request_message[42];
+                char request_message[51];
                 request_message[0] = method;
                 request_message[1] = 0;
                 strcat(request_message, argv[2]); // todo: change to argv[3] after ip:port is implemented
@@ -88,7 +90,7 @@ void receive_file(int sockfd)
 {
     int n; 
     FILE *fp;
-    char *filename = "test.received.txt";
+    char *filename = "test.received.txt";  // todo: change to name it the same name as original file
     char buffer[SIZE];
 
     fp = fopen(filename, "w");

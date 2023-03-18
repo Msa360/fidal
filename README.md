@@ -14,3 +14,4 @@ using tcp/ip to transfer data over network
 - transfer progress bar
 - encryption
 - passwords to connect to servers
+- .fidalignore file to make certain files unavailable
