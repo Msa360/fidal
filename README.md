@@ -9,9 +9,11 @@
 
 using tcp/ip to transfer data over network
 
+see [docs/headers.txt](docs/headers.txt) to understand the protocol
+
 ## todo:
 
 - transfer progress bar
 - encryption
 - passwords to connect to servers
-- .fidalignore file to make certain files unavailable
+- add .fidalignore file functionality to protect certain files

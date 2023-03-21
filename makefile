@@ -2,10 +2,10 @@ CC ?= clang
 
 all: server client
 
-server: server.c cliparser.h
+bin/server: server.c cliparser.h
 	$(CC) -o bin/server server.c
 
-client: client.c
+bin/client: client.c
 	$(CC) -o bin/client client.c
 
 tests:

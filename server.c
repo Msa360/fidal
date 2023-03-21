@@ -135,46 +135,44 @@ void send_file(FILE *fp, int sockfd)
     }
 }
 
-void list_dirs()
+void list_dirs(char* path, char* directories_memory)
 {
     DIR *dp;
     struct dirent *ep;     
-    dp = opendir("./");
+    dp = opendir("./");     // todo: let the user ls subdirectories, but make sure he can't ls higher directories
 
-    // initialize directories list
-    char** directories = malloc(5*sizeof(char*));
-    for(int i = 0; i < 5; i++){
-        directories[i] = (char*)malloc(50*sizeof(char));
-    }
-
-    int position = 0;
     if (dp != NULL)
     {   
+        // initialize directories list
+        char* directories = malloc(500);
+
+        int position = 1;   // start at 1 to let place for succes/error byte
         while ((ep = readdir(dp)) != NULL)
         {
-            directories[position] = ep->d_name;
+            // todo: check if (position + name_length + 2 > 500) to not exceed allocated memory
+            if (ep->d_type == DT_REG || ep->d_type == DT_UNKNOWN)
+            {
+                *(directories + position) = (char) 0;
+            } else if (ep->d_type == DT_DIR)
+            {
+                *(directories + position) = (char) 1;
+            }
             position++;
+        
+            unsigned char name_length = (unsigned char) strlen(ep->d_name);
+            *(directories + position) = name_length;
+            position++;
+            memcpy(directories + position, ep->d_name, name_length);
+            position += name_length;
         }
-        (void) closedir(dp);
+        closedir(dp);
 
-        int index = 0;
-        while (1)
-        {
-            if (directories[index] != NULL)
-            {
-                printf("%s ", directories[index]);
-                index++;
-            }
-            else
-            {
-                printf("\n");
-                break;
-            }
-        }
+        free(directories);
     }
     else
     {
         perror("Couldn't open the directory");
-        exit(1);
+        *directories_memory = 0;         // 0 for error
+        *(directories_memory + 1) = 0;   // then terminating with null byte
     }
 }

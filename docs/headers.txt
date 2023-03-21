@@ -9,16 +9,14 @@ client requests:
     name:
         file/directory name converted in ascii and with null byte appended
     example byte by byte of get request for "file.txt":
-        1 102 105 108 101 46 116 120 116 0 - <get> <"file.txt"> <null character>
+        1 102 105 108 101 46 116 120 116 0 - <get> <"file.txt"> <null byte>
 
 
 server ls response:
-    <1 byte for status> <4 bytes for size> <1 byte for type of file n> <1 byte for name length of file n> <name of file n> <1 byte for size of file n+1> <name of file n+1>
+    <1 byte for status> <1 byte for type of file n> <1 byte for name length of file n> <name of file n> <1 byte for type of file n+1> <1 byte for size of file n+1> <name of file n+1> <null byte>
     status:
         1 for success
         0 for error
-    size:
-        number of file/directories
     type:
         0 for file
         1 for directory
