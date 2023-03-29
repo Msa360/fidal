@@ -50,17 +50,24 @@ int main(int argc, char const **argv)
     {
         if (strcmp(argv[1], "ls") == 0)
         {
-            char method = 1; // means ls
-            send(network_socket, &method, sizeof(method), 0);   // send ls request
+            char message[51]; // means ls
+            message[0] = 1;
+            message[1] = '\0';
+            send(network_socket, &message, sizeof(message), 0);   // send ls request
+
             char filenames[SIZE];  // bytes reserved to store filenames
-            recv(network_socket, filenames, sizeof(filenames), 0);    // wait for response
+            if (recv(network_socket, filenames, sizeof(filenames), 0) <= 0) {
+                printf("DEBUG");
+            } else {printf("hey%d", filenames[4]);}
             if (filenames[0] == 1) // success
             {
                 int position = 1;    // keeps track of where we are in the message
-                while (1) {
+                char status = 1;  // to stop while loop
+                while (status) {
                     switch (filenames[position]) {
                     case '\0':
                         printf("\n");
+                        status = 0;
                         break;
                     case 1:     // normal file
                         position++;
@@ -79,6 +86,8 @@ int main(int argc, char const **argv)
                     }
                 }
             }
+            close(network_socket);
+            return 0;
             
         }
         else if (strcmp(argv[1], "get") == 0)
@@ -93,12 +102,14 @@ int main(int argc, char const **argv)
             } else
             {
                 printf("Error: no file given in argument\n");
+                close(network_socket);
                 exit(0);
             }
             
         }
     } else {
         printf("Error: not enough arguments\n");
+        close(network_socket);
         exit(0);
     }
     

@@ -20,6 +20,7 @@
 
 
 void send_file(FILE *fp, int sockfd);
+void list_dirs(char* path, char* directories_mem, unsigned short mem_size);
 
 
 int main(int argc, char const **argv)
@@ -84,11 +85,21 @@ int main(int argc, char const **argv)
             char client_arg[51]; // 1 byte for arg and 50 bytes for filename including '\0'
             if (recv(client_socket, &client_arg, sizeof(client_arg), 0) <= 0) 
             {
-                perror("[-]Bad client arg\n");
+                perror("[-]Bad client arg");
+                close(client_socket);
+                break;
             }
             if (client_arg[0] == 1) 
             {
-                // todo: ls list available files to client
+                printf("Client requested ls\n");
+                unsigned short mem_size = 750;
+                char* dir_memory = malloc(mem_size);
+                list_dirs("", dir_memory, mem_size);
+                send(client_socket, dir_memory, mem_size, 0);
+                free(dir_memory);
+    
+                close(client_socket);
+                break;
             }
             else if (client_arg[0] == 2) 
             {
@@ -135,7 +146,7 @@ void send_file(FILE *fp, int sockfd)
     }
 }
 
-void list_dirs(char* path, char* directories_memory, unsigned short mem_size)
+void list_dirs(char* path, char* directories_mem, unsigned short mem_size)
 {
     DIR *dp;
     struct dirent *ep;     
@@ -143,39 +154,36 @@ void list_dirs(char* path, char* directories_memory, unsigned short mem_size)
 
     if (dp != NULL)
     {   
-        // initialize directories list
-        char* directories = malloc(500);
-
         int position = 1;   // start at 1 to let place for succes/error byte
         while ((ep = readdir(dp)) != NULL)
         {
             unsigned char name_length = (unsigned char) strlen(ep->d_name);
-            if (position + 2 + name_length < 500)   // to not exceed the allocated memory
+            if (position + 2 + name_length < mem_size)   // to not exceed the allocated memory
             {
                 if (ep->d_type == DT_REG || ep->d_type == DT_UNKNOWN)
                 {
-                    *(directories + position) = (char) 1;
+                    *(directories_mem + position) = (char) 1;
                 } else if (ep->d_type == DT_DIR)
                 {
-                    *(directories + position) = (char) 2;
+                    *(directories_mem + position) = (char) 2;
                 }
                 position++;
 
-                *(directories + position) = name_length;
+                *(directories_mem + position) = name_length;
                 position++;
-                memcpy(directories + position, ep->d_name, name_length);
+                memcpy(directories_mem + position, ep->d_name, name_length);
                 position += name_length;
             }
         }
-        *(directories + position) = '\0';   // end of sequence
+        *directories_mem = 1;   // start of sequence success byte
+        *(directories_mem + position) = '\0';   // end of sequence
 
         closedir(dp);
-        free(directories);
     }
     else
     {
         perror("Couldn't open the directory");
-        *directories_memory = 0;         // 0 for error
-        *(directories_memory + 1) = 0;   // then terminating with null byte
+        *directories_mem = 0;         // 0 for error
+        *(directories_mem + 1) = 0;   // then terminating with null byte
     }
 }
