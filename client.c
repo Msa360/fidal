@@ -58,7 +58,7 @@ int main(int argc, char const **argv)
             char filenames[SIZE];  // bytes reserved to store filenames
             if (recv(network_socket, filenames, sizeof(filenames), 0) <= 0) {
                 printf("DEBUG");
-            } else {printf("hey%d", filenames[4]);}
+            }
             if (filenames[0] == 1) // success
             {
                 int position = 1;    // keeps track of where we are in the message
@@ -71,12 +71,12 @@ int main(int argc, char const **argv)
                         break;
                     case 1:     // normal file
                         position++;
-                        printf("%.*s ", filenames[position], filenames + position + 1);
+                        printf("%.*s\t", filenames[position], filenames + position + 1);
                         position += filenames[position] + 1;
                         break;
                     case 2:     // directory
                         position++;
-                        printf("\033[1;32m%.*s\033[0m ", filenames[position], filenames + position + 1);
+                        printf("\033[1;32m%.*s\033[0m\t", filenames[position], filenames + position + 1);
                         position += filenames[position] + 1;
                         break;
 
