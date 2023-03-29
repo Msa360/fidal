@@ -52,8 +52,34 @@ int main(int argc, char const **argv)
         {
             char method = 1; // means ls
             send(network_socket, &method, sizeof(method), 0);   // send ls request
-            char filenames_received[3000];  // 3 000 bytes reserved to store filenames
-            recv(network_socket, filenames_received, sizeof(filenames_received), 0);    // wait for response
+            char filenames[SIZE];  // bytes reserved to store filenames
+            recv(network_socket, filenames, sizeof(filenames), 0);    // wait for response
+            if (filenames[0] == 1) // success
+            {
+                int position = 1;    // keeps track of where we are in the message
+                while (1) {
+                    switch (filenames[position]) {
+                    case '\0':
+                        printf("\n");
+                        break;
+                    case 1:     // normal file
+                        position++;
+                        printf("%.*s ", filenames[position], filenames + position + 1);
+                        position += filenames[position] + 1;
+                        break;
+                    case 2:     // directory
+                        position++;
+                        printf("\033[1;32m%.*s\033[0m ", filenames[position], filenames + position + 1);
+                        position += filenames[position] + 1;
+                        break;
+
+                    default:
+                        printf("An error happened in the server response");
+                        break;
+                    }
+                }
+            }
+            
         }
         else if (strcmp(argv[1], "get") == 0)
         {

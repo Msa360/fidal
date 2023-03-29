@@ -18,6 +18,6 @@ server ls response:
         1 for success
         0 for error
     type:
-        0 for file
-        1 for directory
-    [status, size] are headers, and [type, name length, name] are specific to each file name
+        1 for file
+        2 for directory
+    status is a header, and [type, name length, name] are specific to each file name

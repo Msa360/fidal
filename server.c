@@ -135,7 +135,7 @@ void send_file(FILE *fp, int sockfd)
     }
 }
 
-void list_dirs(char* path, char* directories_memory)
+void list_dirs(char* path, char* directories_memory, unsigned short mem_size)
 {
     DIR *dp;
     struct dirent *ep;     
@@ -149,24 +149,27 @@ void list_dirs(char* path, char* directories_memory)
         int position = 1;   // start at 1 to let place for succes/error byte
         while ((ep = readdir(dp)) != NULL)
         {
-            // todo: check if (position + name_length + 2 > 500) to not exceed allocated memory
-            if (ep->d_type == DT_REG || ep->d_type == DT_UNKNOWN)
-            {
-                *(directories + position) = (char) 0;
-            } else if (ep->d_type == DT_DIR)
-            {
-                *(directories + position) = (char) 1;
-            }
-            position++;
-        
             unsigned char name_length = (unsigned char) strlen(ep->d_name);
-            *(directories + position) = name_length;
-            position++;
-            memcpy(directories + position, ep->d_name, name_length);
-            position += name_length;
-        }
-        closedir(dp);
+            if (position + 2 + name_length < 500)   // to not exceed the allocated memory
+            {
+                if (ep->d_type == DT_REG || ep->d_type == DT_UNKNOWN)
+                {
+                    *(directories + position) = (char) 1;
+                } else if (ep->d_type == DT_DIR)
+                {
+                    *(directories + position) = (char) 2;
+                }
+                position++;
 
+                *(directories + position) = name_length;
+                position++;
+                memcpy(directories + position, ep->d_name, name_length);
+                position += name_length;
+            }
+        }
+        *(directories + position) = '\0';   // end of sequence
+
+        closedir(dp);
         free(directories);
     }
     else

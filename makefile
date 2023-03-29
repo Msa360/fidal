@@ -1,6 +1,6 @@
 CC ?= clang
 
-all: server client
+all: bin/server bin/client
 
 bin/server: server.c cliparser.h
 	$(CC) -o bin/server server.c

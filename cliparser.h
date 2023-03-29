@@ -21,7 +21,7 @@ void parse(char **argv, char *usage_type, char *ip, unsigned int *port, char *fi
         printf("Invalid usage!\n");
         printf("Usage: fidal listen [port]");
         printf("Usage: fidal get [ip:port] [filename]");
-        printf("Usage: fidal ls [ip:port]"); // list the available files on the server
+        printf("Usage: fidal ls [ip:port]");    // list the available files on the server
         exit(1);
     }
 }
