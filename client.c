@@ -52,17 +52,23 @@ int main(int argc, char const **argv)
         {
             char message[51]; // means ls
             message[0] = 1;
-            message[1] = '\0';
-            send(network_socket, &message, sizeof(message), 0);   // send ls request
-
-            char filenames[SIZE];  // bytes reserved to store filenames
-            if (recv(network_socket, filenames, sizeof(filenames), 0) <= 0) {
-                printf("DEBUG");
-            }
-            if (filenames[0] == 1) // success
+            if (argc >= 3)
             {
-                int position = 1;    // keeps track of where we are in the message
-                char status = 1;  // to stop while loop
+                memcpy(message+1, argv[2], 50);
+                message[50] = '\0';
+            }
+            else { message[1] = '\0'; }
+
+            send(network_socket, &message, sizeof(message), 0);    // send ls request
+
+            char filenames[SIZE];   // bytes reserved to store filenames
+            if (recv(network_socket, filenames, sizeof(filenames), 0) <= 0) {
+                printf("An error happened with the server\n");
+            }
+            if (filenames[0] == 1)  // success
+            {
+                int position = 1;   // keeps track of where we are in the message
+                char status = 1;    // to stop while loop
                 while (status) {
                     switch (filenames[position]) {
                     case '\0':
@@ -71,20 +77,24 @@ int main(int argc, char const **argv)
                         break;
                     case 1:     // normal file
                         position++;
-                        printf("%.*s\t", filenames[position], filenames + position + 1);
+                        printf("%.*s\n", filenames[position], filenames + position + 1);
                         position += filenames[position] + 1;
                         break;
                     case 2:     // directory
                         position++;
-                        printf("\033[1;32m%.*s\033[0m\t", filenames[position], filenames + position + 1);
+                        printf("\033[1;32m%.*s\033[0m\n", filenames[position], filenames + position + 1); // prints in green
                         position += filenames[position] + 1;
                         break;
 
                     default:
-                        printf("An error happened in the server response");
+                        printf("An error happened in the server response\n");
                         break;
                     }
                 }
+            } else if (filenames[0] == 2) {  // unsafe path
+                printf("Invalid path, cannot go in higher directories\n");
+            } else {
+                printf("An error happened in the server response\n");
             }
             close(network_socket);
             return 0;

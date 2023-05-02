@@ -7,7 +7,8 @@ client requests:
         2 for get
         if ls is used then name can by empty or can be a subdirectory
     name:
-        file/directory name converted in ascii and with null byte appended
+        file/directory name converted in ascii and with null byte appended,
+        null byte is required else the last byte will be replaced by null char.
     example byte by byte of get request for "file.txt":
         1 102 105 108 101 46 116 120 116 0 - <get> <"file.txt"> <null byte>
 
@@ -17,6 +18,7 @@ server ls response:
     status:
         1 for success
         0 for error
+        2 for invalid path requested
     type:
         1 for file
         2 for directory

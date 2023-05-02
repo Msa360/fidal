@@ -20,7 +20,8 @@
 
 
 void send_file(FILE *fp, int sockfd);
-void list_dirs(char* path, char* directories_mem, unsigned short mem_size);
+void list_dir_ecoding(char* path, char* directories_mem, unsigned short mem_size);
+int check_safe_path(char* path);
 
 
 int main(int argc, char const **argv)
@@ -89,19 +90,27 @@ int main(int argc, char const **argv)
                 close(client_socket);
                 break;
             }
-            if (client_arg[0] == 1) 
+            if (client_arg[0] == 1) // ls request
             {
-                printf("Client requested ls\n");
+                char path[50];
+                if (client_arg[1] == 0) {
+                    memcpy(path, "./", 3);
+                } else
+                {
+                    memcpy(path, client_arg+1, 49);
+                    path[49] = '\0'; // appending null byte in case it wasn't included
+                }
+                printf("Client requested ls %s\n", path);
                 unsigned short mem_size = 750;
                 char* dir_memory = malloc(mem_size);
-                list_dirs("", dir_memory, mem_size);
+                list_dir_ecoding(path, dir_memory, mem_size);    // formats the filenames to be send
                 send(client_socket, dir_memory, mem_size, 0);
                 free(dir_memory);
     
                 close(client_socket);
                 break;
             }
-            else if (client_arg[0] == 2) 
+            else if (client_arg[0] == 2) // get request
             {
                 printf("Client requested: %s\n", client_arg + 1); // client_arg + 1 to skip method byte
                 
@@ -146,11 +155,17 @@ void send_file(FILE *fp, int sockfd)
     }
 }
 
-void list_dirs(char* path, char* directories_mem, unsigned short mem_size)
+void list_dir_ecoding(char* path, char* directories_mem, unsigned short mem_size)
 {
+    if (check_safe_path(path) == 0) {
+        *directories_mem = 2;         // 2 for invalid path error code
+        *(directories_mem + 1) = 0;   // then terminating with null byte
+        return;
+    }
+
     DIR *dp;
-    struct dirent *ep;     
-    dp = opendir("./");     // todo: let the user ls subdirectories, but make sure he can't ls higher directories
+    struct dirent *ep;
+    dp = opendir(path);  // todo: check if user isn't reaching higher directories
 
     if (dp != NULL)
     {   
@@ -160,19 +175,21 @@ void list_dirs(char* path, char* directories_mem, unsigned short mem_size)
             unsigned char name_length = (unsigned char) strlen(ep->d_name);
             if (position + 2 + name_length < mem_size)   // to not exceed the allocated memory
             {
-                if (ep->d_type == DT_REG || ep->d_type == DT_UNKNOWN)
-                {
-                    *(directories_mem + position) = (char) 1;
-                } else if (ep->d_type == DT_DIR)
-                {
-                    *(directories_mem + position) = (char) 2;
-                }
-                position++;
+                if (strcmp(ep->d_name, ".") != 0 && strcmp(ep->d_name, "..") != 0) {
+                    if (ep->d_type == DT_REG || ep->d_type == DT_UNKNOWN)
+                    {
+                        *(directories_mem + position) = (char) 1;
+                    } else if (ep->d_type == DT_DIR)
+                    {
+                        *(directories_mem + position) = (char) 2;
+                    }
+                    position++;
 
-                *(directories_mem + position) = name_length;
-                position++;
-                memcpy(directories_mem + position, ep->d_name, name_length);
-                position += name_length;
+                    *(directories_mem + position) = name_length;
+                    position++;
+                    memcpy(directories_mem + position, ep->d_name, name_length);
+                    position += name_length;
+                }
             }
         }
         *directories_mem = 1;   // start of sequence success byte
@@ -186,4 +203,20 @@ void list_dirs(char* path, char* directories_mem, unsigned short mem_size)
         *directories_mem = 0;         // 0 for error
         *(directories_mem + 1) = 0;   // then terminating with null byte
     }
+}
+
+int check_safe_path(char* path) {
+    // a safe path means the path doesn't go in higher directories ex: ../
+    // return 0 if unsafe, 1 if safe
+    char last_tok = -1;
+    unsigned int tok_index = 0; 
+    while (last_tok != '\0')
+    {   
+        if (path[tok_index] == '.' && last_tok == '.') {
+            return 0;
+        }
+        last_tok = path[tok_index];
+        tok_index++;
+    }
+    return 1;
 }
