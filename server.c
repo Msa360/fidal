@@ -20,7 +20,7 @@
 
 
 void send_file(FILE *fp, int sockfd);
-void list_dir_ecoding(char* path, char* directories_mem, unsigned short mem_size);
+void list_dir_encoding(char* path, char* directories_mem, unsigned short mem_size);
 int check_safe_path(char* path);
 
 
@@ -92,18 +92,19 @@ int main(int argc, char const **argv)
             }
             if (client_arg[0] == 1) // ls request
             {
-                char path[50];
+                char path[52];
                 if (client_arg[1] == 0) {
                     memcpy(path, "./", 3);
                 } else
                 {
-                    memcpy(path, client_arg+1, 49);
-                    path[49] = '\0'; // appending null byte in case it wasn't included
+                    memcpy(path, "./", 2);
+                    memcpy(path+2, client_arg+1, 49);
+                    path[51] = '\0'; // appending null byte in case it wasn't included
                 }
                 printf("Client requested ls %s\n", path);
                 unsigned short mem_size = 750;
                 char* dir_memory = malloc(mem_size);
-                list_dir_ecoding(path, dir_memory, mem_size);    // formats the filenames to be send
+                list_dir_encoding(path, dir_memory, mem_size);    // formats the filenames to be send
                 send(client_socket, dir_memory, mem_size, 0);
                 free(dir_memory);
     
@@ -155,7 +156,7 @@ void send_file(FILE *fp, int sockfd)
     }
 }
 
-void list_dir_ecoding(char* path, char* directories_mem, unsigned short mem_size)
+void list_dir_encoding(char* path, char* directories_mem, unsigned short mem_size)
 {
     if (check_safe_path(path) == 0) {
         *directories_mem = 2;         // 2 for invalid path error code

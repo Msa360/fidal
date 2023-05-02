@@ -2,16 +2,21 @@
 
 ## The simplest file transfer command line program
 
-- ### &check; super simple
-- ### &check; easy to use
-- ### &cross; hard
+- ### &check; Super simple
+- ### &check; TCP
+- ### &check; Quick start
 
+## Usage
+```shell
+fidal ip:port get filename
+fidal ip:port ls directory
+```
 
 using tcp/ip to transfer data over network
 
 see [docs/headers.txt](docs/headers.txt) to understand the protocol
 
-## todo:
+### todo:
 
 - transfer progress bar
 - encryption
