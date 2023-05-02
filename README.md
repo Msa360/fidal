@@ -8,8 +8,9 @@
 
 ## Usage
 ```shell
-fidal ip:port get filename
-fidal ip:port ls directory
+fidal listen [port]            # start server in current directory
+fidal get [ip:port] [filename] # get a file from a server instance
+fidal ls [ip:port] [dirname]   # see what files are available
 ```
 
 using tcp/ip to transfer data over network
